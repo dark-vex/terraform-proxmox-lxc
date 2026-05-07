@@ -1,0 +1,61 @@
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1"
+
+      - name: terraform fmt check
+        run: terraform fmt -check -recursive
+
+      - name: install terraform-docs
+        run: |
+          curl -Lo /tmp/terraform-docs.tar.gz \
+            https://github.com/terraform-docs/terraform-docs/releases/download/v0.23.0/terraform-docs-v0.23.0-linux-amd64.tar.gz
+          tar -xzf /tmp/terraform-docs.tar.gz -C /tmp terraform-docs
+          sudo mv /tmp/terraform-docs /usr/local/bin/
+
+      - name: terraform-docs check
+        run: |
+          terraform-docs .
+          git diff --exit-code README.md
+
+      - name: terraform init
+        run: terraform init -backend=false
+
+      - name: terraform validate
+        run: terraform validate
+
+      - name: terraform init (examples)
+        working-directory: examples/basic
+        run: terraform init -backend=false
+
+      - name: terraform validate (examples)
+        working-directory: examples/basic
+        run: terraform validate
+
+      - name: tflint setup
+        uses: terraform-linters/setup-tflint@v4
+
+      - name: tflint init
+        run: tflint --init
+
+      - name: tflint
+        run: tflint
+
+      - name: checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          soft_fail: true
