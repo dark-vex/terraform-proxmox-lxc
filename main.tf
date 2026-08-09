@@ -106,6 +106,13 @@ resource "proxmox_virtual_environment_container" "this" {
     ignore_changes = [
       # Ignore template changes after creation
       operating_system[0].template_file_id,
+      # initialization.user_account (keys/password) is ForceNew in the
+      # bpg/proxmox provider schema. Do NOT remove this — with
+      # prevent_destroy = true below, any real diff here would make
+      # Terraform try to replace the container and fail the apply.
+      # Credential changes must go through an out-of-band `pct set`
+      # (safe: this attribute is permanently ignored, so Terraform won't
+      # revert it) or a deliberate destroy+recreate.
       initialization[0].user_account,
     ]
     prevent_destroy = true
