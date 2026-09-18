@@ -6,7 +6,7 @@ Terraform module for Proxmox LXC containers using the [bpg/proxmox](https://regi
 
 ```hcl
 module "container" {
-  source = "github.com/dark-vex/terraform-proxmox-lxc?ref=v1.0.0"
+  source = "github.com/dark-vex/terraform-proxmox-lxc?ref=v2.0.0"
 
   hostname         = "my-container"
   vmid             = 200
@@ -16,9 +16,11 @@ module "container" {
   cpu_cores = 2
   memory    = 1024
 
-  ip_config = {
-    ipv4_address = "192.168.1.100/24"
-    ipv4_gateway = "192.168.1.1"
+  network_interfaces = {
+    eth0 = {
+      ipv4_address = "192.168.1.100/24"
+      ipv4_gateway = "192.168.1.1"
+    }
   }
 }
 ```
@@ -62,14 +64,10 @@ No modules.
 | <a name="input_disk_size"></a> [disk\_size](#input\_disk\_size) | Root disk size in GB | `number` | `8` | no |
 | <a name="input_features"></a> [features](#input\_features) | Container features | <pre>object({<br/>    nesting = optional(bool, false)<br/>    fuse    = optional(bool, false)<br/>    keyctl  = optional(bool, false)<br/>    mount   = optional(list(string), [])<br/>  })</pre> | `{}` | no |
 | <a name="input_hostname"></a> [hostname](#input\_hostname) | Container hostname | `string` | n/a | yes |
-| <a name="input_ip_config"></a> [ip\_config](#input\_ip\_config) | IP configuration | <pre>object({<br/>    ipv4_address = optional(string, "dhcp")<br/>    ipv4_gateway = optional(string)<br/>    ipv6_address = optional(string)<br/>    ipv6_gateway = optional(string)<br/>  })</pre> | <pre>{<br/>  "ipv4_address": "dhcp"<br/>}</pre> | no |
 | <a name="input_manage_user_account"></a> [manage\_user\_account](#input\_manage\_user\_account) | n/a | `bool` | `true` | no |
 | <a name="input_memory"></a> [memory](#input\_memory) | Memory in MB | `number` | `512` | no |
 | <a name="input_mount_points"></a> [mount\_points](#input\_mount\_points) | Additional mount points | <pre>list(object({<br/>    volume    = string<br/>    path      = string<br/>    size      = optional(string)<br/>    quota     = optional(bool, false)<br/>    replicate = optional(bool, false)<br/>    shared    = optional(bool, false)<br/>  }))</pre> | `[]` | no |
-| <a name="input_network_bridge"></a> [network\_bridge](#input\_network\_bridge) | Network bridge name | `string` | `"vmbr0"` | no |
-| <a name="input_network_firewall"></a> [network\_firewall](#input\_network\_firewall) | Enable/Disable the Firewall | `bool` | `false` | no |
-| <a name="input_network_interface_name"></a> [network\_interface\_name](#input\_network\_interface\_name) | Network interface name inside container | `string` | `"eth0"` | no |
-| <a name="input_network_mac_address"></a> [network\_mac\_address](#input\_network\_mac\_address) | MAC address for network interface (optional) | `string` | `null` | no |
+| <a name="input_network_interfaces"></a> [network\_interfaces](#input\_network\_interfaces) | Network interfaces, keyed by the container-side interface name (e.g. eth0, eth1). Map key order (ascending) determines net0/net1/... assignment on the Proxmox side and pairs positionally with each interface's IP config — inserting a key that sorts earlier than an existing one reindexes every later interface. | <pre>map(object({<br/>    name         = optional(string)<br/>    bridge       = optional(string, "vmbr0")<br/>    mac_address  = optional(string)<br/>    firewall     = optional(bool, false)<br/>    enabled      = optional(bool)<br/>    mtu          = optional(number)<br/>    vlan_id      = optional(number)<br/>    rate_limit   = optional(number)<br/>    ipv4_address = optional(string, "dhcp")<br/>    ipv4_gateway = optional(string)<br/>    ipv6_address = optional(string)<br/>    ipv6_gateway = optional(string)<br/>  }))</pre> | <pre>{<br/>  "eth0": {}<br/>}</pre> | no |
 | <a name="input_node_name"></a> [node\_name](#input\_node\_name) | Target Proxmox node name | `string` | n/a | yes |
 | <a name="input_os_type"></a> [os\_type](#input\_os\_type) | Operating system type (ubuntu, debian, centos, etc.) | `string` | `"ubuntu"` | no |
 | <a name="input_password"></a> [password](#input\_password) | Root password | `string` | `null` | no |

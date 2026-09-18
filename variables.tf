@@ -72,40 +72,24 @@ variable "os_type" {
   default     = "ubuntu"
 }
 
-variable "network_bridge" {
-  description = "Network bridge name"
-  type        = string
-  default     = "vmbr0"
-}
-
-variable "network_interface_name" {
-  description = "Network interface name inside container"
-  type        = string
-  default     = "eth0"
-}
-
-variable "network_mac_address" {
-  description = "MAC address for network interface (optional)"
-  type        = string
-  default     = null
-}
-
-variable "network_firewall" {
-  description = "Enable/Disable the Firewall"
-  type        = bool
-  default     = false
-}
-
-variable "ip_config" {
-  description = "IP configuration"
-  type = object({
+variable "network_interfaces" {
+  description = "Network interfaces, keyed by the container-side interface name (e.g. eth0, eth1). Map key order (ascending) determines net0/net1/... assignment on the Proxmox side and pairs positionally with each interface's IP config — inserting a key that sorts earlier than an existing one reindexes every later interface."
+  type = map(object({
+    name         = optional(string)
+    bridge       = optional(string, "vmbr0")
+    mac_address  = optional(string)
+    firewall     = optional(bool, false)
+    enabled      = optional(bool)
+    mtu          = optional(number)
+    vlan_id      = optional(number)
+    rate_limit   = optional(number)
     ipv4_address = optional(string, "dhcp")
     ipv4_gateway = optional(string)
     ipv6_address = optional(string)
     ipv6_gateway = optional(string)
-  })
+  }))
   default = {
-    ipv4_address = "dhcp"
+    eth0 = {}
   }
 }
 
