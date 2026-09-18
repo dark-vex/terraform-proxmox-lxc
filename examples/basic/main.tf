@@ -33,7 +33,7 @@ provider "proxmox" {
 }
 
 module "container" {
-  source = "github.com/dark-vex/terraform-proxmox-lxc?ref=v1.0.0"
+  source = "../.."
 
   hostname         = "example-lxc"
   vmid             = 200
@@ -43,8 +43,10 @@ module "container" {
   cpu_cores = 2
   memory    = 1024
 
-  ip_config = {
-    ipv4_address = "192.168.1.100/24"
-    ipv4_gateway = "192.168.1.1"
+  network_interfaces = {
+    eth0 = {
+      ipv4_address = "192.168.1.100/24"
+      ipv4_gateway = "192.168.1.1"
+    }
   }
 }

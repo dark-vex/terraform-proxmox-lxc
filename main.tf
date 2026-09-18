@@ -18,16 +18,19 @@ resource "proxmox_virtual_environment_container" "this" {
   initialization {
     hostname = var.hostname
 
-    ip_config {
-      ipv4 {
-        address = var.ip_config.ipv4_address
-        gateway = var.ip_config.ipv4_gateway
-      }
-      dynamic "ipv6" {
-        for_each = var.ip_config.ipv6_address != null ? [1] : []
-        content {
-          address = var.ip_config.ipv6_address
-          gateway = var.ip_config.ipv6_gateway
+    dynamic "ip_config" {
+      for_each = var.network_interfaces
+      content {
+        ipv4 {
+          address = ip_config.value.ipv4_address
+          gateway = ip_config.value.ipv4_gateway
+        }
+        dynamic "ipv6" {
+          for_each = ip_config.value.ipv6_address != null ? [1] : []
+          content {
+            address = ip_config.value.ipv6_address
+            gateway = ip_config.value.ipv6_gateway
+          }
         }
       }
     }
@@ -41,11 +44,18 @@ resource "proxmox_virtual_environment_container" "this" {
     }
   }
 
-  network_interface {
-    name        = var.network_interface_name
-    bridge      = var.network_bridge
-    mac_address = var.network_mac_address
-    firewall    = var.network_firewall
+  dynamic "network_interface" {
+    for_each = var.network_interfaces
+    content {
+      name        = coalesce(network_interface.value.name, network_interface.key)
+      bridge      = network_interface.value.bridge
+      mac_address = network_interface.value.mac_address
+      firewall    = network_interface.value.firewall
+      enabled     = network_interface.value.enabled
+      mtu         = network_interface.value.mtu
+      vlan_id     = network_interface.value.vlan_id
+      rate_limit  = network_interface.value.rate_limit
+    }
   }
 
   disk {
